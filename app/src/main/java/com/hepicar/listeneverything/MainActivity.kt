@@ -1,9 +1,17 @@
 package com.hepicar.listeneverything
 
+import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.os.Handler
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import com.hepicar.listeneverything.model.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,12 +33,33 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        openCamera()
+
     }
+
+    private fun openCamera() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 90)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 90){
+            Log.d(TAG, "permission camera granted ")
+        }
+    }
+
 
     override fun onResume() {
         super.onResume()
         EventBus.getDefault().register(this)
         updateButton()
+        openCamera()
     }
 
     override fun onStop() {
@@ -45,7 +74,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onClickedStartButton(view: View){
-        println("click start button ${ForegroundService.isRunning}")
+        val cameraHiddenIntent = Intent(this,DemoCamService::class.java)
+        if(!DemoCamService.isRunning){
+            cameraHiddenIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
+        }else{
+            cameraHiddenIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
+        }
+        startService(cameraHiddenIntent)
+
         val startINtent = Intent(this,ForegroundService::class.java)
         if (!ForegroundService.isRunning){
             startINtent.action = Constants.ACTION.STARTFOREGROUND_ACTION
@@ -53,6 +89,7 @@ class MainActivity : AppCompatActivity() {
             startINtent.action = Constants.ACTION.STOPFOREGROUND_ACTION
         }
         startService(startINtent)
+
         start_button.text = "wait..."
         Handler().postDelayed({
             updateButton()

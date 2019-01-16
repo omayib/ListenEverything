@@ -6,12 +6,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
+import android.graphics.PixelFormat
+import android.hardware.*
 import android.os.BatteryManager
 import android.os.Handler
 import android.os.IBinder
@@ -19,11 +18,18 @@ import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.os.PowerManager
+import android.view.Gravity
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import android.view.WindowManager
 import com.hepicar.listeneverything.model.*
 import org.greenrobot.eventbus.EventBus
+import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 class ForegroundService: Service(), SensorEventListener {
+
 
 
     private val TAG = "ForegroundService"
@@ -36,7 +42,6 @@ class ForegroundService: Service(), SensorEventListener {
 
     private var accelerometerData = FloatArray(3)
     private var magnetometerData = FloatArray(3)
-
     var pm: PowerManager? = null
     var wl: PowerManager.WakeLock? = null
 
@@ -53,12 +58,15 @@ class ForegroundService: Service(), SensorEventListener {
         var isRunning:Boolean = false
     }
 
+
     override fun onCreate() {
         super.onCreate()
         pm = getSystemService(Context.POWER_SERVICE) as PowerManager?;
         wl = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"eee:aaa")
         wl?.acquire()
     }
+
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if(intent?.action.equals(Constants.ACTION.STARTFOREGROUND_ACTION)){
             ForegroundService.isRunning = true
@@ -78,9 +86,12 @@ class ForegroundService: Service(), SensorEventListener {
         return START_STICKY
     }
 
+
+
+
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy called");
+        Log.d(TAG, "onDestroy called")
         manager?.unregisterListener(this,accelerometerSensor)
         manager?.unregisterListener(this,proximitySensor)
         manager?.unregisterListener(this,geomagneticSensor)
