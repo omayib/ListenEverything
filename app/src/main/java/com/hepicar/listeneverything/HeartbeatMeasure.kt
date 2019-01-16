@@ -33,11 +33,12 @@ class HeartbeatMeasure{
     }
 
     fun startTimer(){
+        println("starting timer")
         startTime = System.currentTimeMillis()
     }
 
     fun previewFrameCalculation(data: ByteArray?, camera: Camera?){
-        Log.d(TAG, "onPreviewFrame() called with: data = [$data], camera = [$camera]")
+        Log.d(TAG, "scan...")
         if (data == null) throw NullPointerException()
         val size = camera?.getParameters()!!.previewSize ?: throw NullPointerException()
 
@@ -69,12 +70,11 @@ class HeartbeatMeasure{
             newType = TYPE.RED
             if (newType != currentType) {
                 beats++
-                Log.d(TAG, "detak: " + beats + ", timestamp :" + Timestamp(System.currentTimeMillis()))
+                Log.d(TAG, "detak!  timestamp :" + Timestamp(System.currentTimeMillis()))
             }
         } else if (imgAvg > rollingAverage) {
             newType = TYPE.GREEN
         }
-        Log.d(TAG, "BEAT!! beats=$beats")
 
         if (averageIndex == averageArraySize) averageIndex = 0
         averageArray[averageIndex] = imgAvg
@@ -97,10 +97,6 @@ class HeartbeatMeasure{
                 return
             }
 
-            Log.d(
-                TAG,
-                "totalTimeInSecs=$totalTimeInSecs beats=$beats"
-            )
 
             if (beatsIndex == beatsArraySize) beatsIndex = 0
             beatsArray[beatsIndex] = dpm
@@ -115,7 +111,7 @@ class HeartbeatMeasure{
                 }
             }
             val beatsAvg = beatsArrayAvg / beatsArrayCnt
-            Log.d(TAG, "BEAT!! beats=$beatsAvg")
+//            Log.d(TAG, "estimasi denyut per menit=$beatsAvg")
 
             startTime = System.currentTimeMillis()
             beats = 0.0
