@@ -1,6 +1,9 @@
 package com.hepicar.listeneverything
 
 import android.Manifest
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +17,10 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import com.hepicar.listeneverything.model.*
+import com.zhaoxiaodan.miband.ActionCallback
+import com.zhaoxiaodan.miband.MiBand
+import com.zhaoxiaodan.miband.listeners.HeartRateNotifyListener
+import com.zhaoxiaodan.miband.listeners.NotifyListener
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_accelerometer.*
 import kotlinx.android.synthetic.main.item_battery.*
@@ -24,18 +31,89 @@ import kotlinx.android.synthetic.main.item_rotation.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
     val TAG = "MainActivity"
+    var miBand:MiBand? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        setupPermission()
         openCamera()
+    }
+
+    private fun setupPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION), 91)
+        }else{
+//            setupMiband()
+        }
+    }
+
+    private fun setupMiband(){
+        println("setup miband")
+        miBand = MiBand(this)
+        miBand!!.setDisconnectedListener(disconnectedListener)
+        miBand!!.setHeartRateScanListener(heartRateNotifyListener)
+        MiBand.startScan(scanCalback)
+    }
+    lateinit var device: BluetoothDevice
+    val scanCalback:ScanCallback = object:ScanCallback(){
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+            device = result!!.device
+            println("miband scan.. {${device.name}}")
+            if(device.name ==null )return
+            if (device.name.equals("MI Band 2")){
+                miBand!!.connect(device,connectCallback)
+                MiBand.stopScan(this)
+            }
+        }
+    }
+
+    val disconnectedListener:NotifyListener = object : NotifyListener{
+        override fun onNotify(data: ByteArray?) {
+            println("miband disconnected")
+            MiBand.startScan(scanCalback)
+        }
 
     }
+    val pairingCallback: ActionCallback = object:ActionCallback{
+        override fun onSuccess(data: Any?) {
+            println("miband pairing success, heartRate scanning..")
+            miBand!!.startHeartRateScan()
+        }
+
+        override fun onFail(errorCode: Int, msg: String?) {
+            println("miband pairing fail {$msg}")
+        }
+
+    }
+    val connectCallback: ActionCallback = object:ActionCallback{
+        override fun onSuccess(data: Any?) {
+            println("miband connect success")
+            miBand!!.pair(pairingCallback)
+        }
+
+        override fun onFail(errorCode: Int, msg: String?) {
+            println("miband connect fail {$msg}")
+        }
+
+    }
+
+    val heartRateNotifyListener:HeartRateNotifyListener = object:HeartRateNotifyListener{
+        override fun onNotify(heartRate: Int) {
+            println("miband heartrate {$heartRate}")
+        }
+    }
+
 
     private fun openCamera() {
         if (ContextCompat.checkSelfPermission(
@@ -51,6 +129,8 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 90){
             Log.d(TAG, "permission camera granted ")
+        }else if (requestCode == 91){
+//            setupMiband()
         }
     }
 

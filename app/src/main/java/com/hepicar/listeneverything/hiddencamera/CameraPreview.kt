@@ -167,7 +167,7 @@ internal class CameraPreview(context: Context, private val mCameraCallbacks: Cam
                 try {
                     val p = mCamera!!.getParameters()
                     p.flashMode = Camera.Parameters.FLASH_MODE_TORCH
-                    mCamera!!.setParameters(p)
+//                    mCamera!!.setParameters(p)
                     mCamera!!.setPreviewDisplay(mHolder)
                     mCamera!!.startPreview()
                     val fps = mCamera!!.parameters.supportedPreviewFpsRange
