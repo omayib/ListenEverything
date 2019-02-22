@@ -23,6 +23,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
 import com.hepicar.listeneverything.model.*
+import com.samsung.android.sdk.sensorextension.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
@@ -39,6 +40,15 @@ class ForegroundService: Service(), SensorEventListener {
     var proximitySensor: Sensor? = null
     var geomagneticSensor: Sensor? = null
     var gpsSensor:GPSService? = null
+    var hrSensorManager:SsensorManager? = null
+    var hrSensorExtention:SsensorExtension? = null
+    var hrSensorListener:SsensorEventListener? =null
+
+    var hrIr:Ssensor? = null
+    var hrRed:Ssensor? = null
+    var hrGreen:Ssensor? = null
+    var hrBlue:Ssensor? = null
+
 
     private var accelerometerData = FloatArray(3)
     private var magnetometerData = FloatArray(3)
@@ -95,6 +105,10 @@ class ForegroundService: Service(), SensorEventListener {
         manager?.unregisterListener(this,accelerometerSensor)
         manager?.unregisterListener(this,proximitySensor)
         manager?.unregisterListener(this,geomagneticSensor)
+        if (hrIr != null)hrSensorManager?.unregisterListener(hrSensorListener,hrIr)
+        if (hrRed != null)hrSensorManager?.unregisterListener(hrSensorListener,hrRed)
+        if (hrGreen != null)hrSensorManager?.unregisterListener(hrSensorListener,hrGreen)
+        if (hrBlue != null)hrSensorManager?.unregisterListener(hrSensorListener,hrBlue)
         this.unregisterReceiver(batteryBroadcastReceiver)
         wl?.release()
         handler.removeCallbacks(periodicUpdate)
@@ -106,6 +120,15 @@ class ForegroundService: Service(), SensorEventListener {
             accelerometerSensor= manager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
             proximitySensor = manager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
             geomagneticSensor = manager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+
+            hrSensorExtention = SsensorExtension()
+            hrSensorExtention!!.initialize(this)
+            hrSensorManager = SsensorManager(this,hrSensorExtention)
+            hrIr = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_IR)
+            hrRed = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_RED)
+            hrGreen = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_GREEN)
+            hrBlue = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_BLUE)
+            hrSensorListener = HrSensorEventListener
 
             val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
             this.registerReceiver(batteryBroadcastReceiver,intentFilter)
@@ -121,10 +144,20 @@ class ForegroundService: Service(), SensorEventListener {
 
         } catch (e: Exception) {
             e.printStackTrace()
+            println("error log sensor")
         }
         manager?.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL)
         manager?.registerListener(this, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL)
         manager?.registerListener(this, geomagneticSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        if(hrIr != null)
+            hrSensorManager!!.registerListener(hrSensorListener,hrIr,SensorManager.SENSOR_DELAY_NORMAL)
+        if(hrRed != null)
+            hrSensorManager!!.registerListener(hrSensorListener,hrRed,SensorManager.SENSOR_DELAY_NORMAL)
+        if(hrGreen != null)
+            hrSensorManager!!.registerListener(hrSensorListener,hrGreen,SensorManager.SENSOR_DELAY_NORMAL)
+        if(hrBlue != null)
+            hrSensorManager!!.registerListener(hrSensorListener,hrBlue,SensorManager.SENSOR_DELAY_NORMAL)
+
         handler.post { periodicUpdate.run() }
     }
 
@@ -132,7 +165,36 @@ class ForegroundService: Service(), SensorEventListener {
         return null
     }
 
+    val HrSensorEventListener = object : SsensorEventListener {
+        override fun OnSensorChanged(event: SsensorEvent?) {
+            print("onsensor hrm changed")
+            val hrSensor:Ssensor = event!!.sensor
 
+            when (event.sensor.type){
+                Ssensor.TYPE_HRM_LED_IR -> {
+                    println("sensor name {${hrSensor.name} \n " +
+                            "ir raw data {${event.values[0]}}")
+                }
+                Ssensor.TYPE_HRM_LED_RED -> {
+                    println("sensor name {${hrSensor.name} \n " +
+                            "red raw data {${event.values[0]}}")
+                }
+                Ssensor.TYPE_HRM_LED_GREEN-> {
+                    println("sensor name {${hrSensor.name} \n " +
+                            "green raw data {${event.values[0]}}")
+                }
+                Ssensor.TYPE_HRM_LED_BLUE -> {
+                    println("sensor name {${hrSensor.name} \n " +
+                            "blue raw data {${event.values[0]}}")
+                }
+            }
+
+        }
+
+        override fun OnAccuracyChanged(event: Ssensor?, p1: Int) {
+        }
+
+    }
     val batteryBroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             var level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL,-1)

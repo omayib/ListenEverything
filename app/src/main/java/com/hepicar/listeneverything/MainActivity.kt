@@ -42,18 +42,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupPermission()
-        openCamera()
+//        openCamera()
     }
 
     private fun setupPermission() {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this,Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION), 91)
-        }else{
-//            setupMiband()
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.BODY_SENSORS),
+                91)
         }
     }
 
@@ -139,7 +139,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         EventBus.getDefault().register(this)
         updateButton()
-        openCamera()
+        //openCamera()
     }
 
     override fun onStop() {
@@ -154,13 +154,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onClickedStartButton(view: View){
-        val cameraHiddenIntent = Intent(this,DemoCamService::class.java)
-        if(!DemoCamService.isRunning){
-            cameraHiddenIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
-        }else{
-            cameraHiddenIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
-        }
-        startService(cameraHiddenIntent)
+//        val cameraHiddenIntent = Intent(this,DemoCamService::class.java)
+//        if(!DemoCamService.isRunning){
+//            cameraHiddenIntent.action = Constants.ACTION.STARTFOREGROUND_ACTION
+//        }else{
+//            cameraHiddenIntent.action = Constants.ACTION.STOPFOREGROUND_ACTION
+//        }
+//        startService(cameraHiddenIntent)
 
         val startINtent = Intent(this,ForegroundService::class.java)
         if (!ForegroundService.isRunning){
