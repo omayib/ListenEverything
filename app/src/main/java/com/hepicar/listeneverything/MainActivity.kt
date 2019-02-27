@@ -25,6 +25,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_accelerometer.*
 import kotlinx.android.synthetic.main.item_battery.*
 import kotlinx.android.synthetic.main.item_geomagnetic.*
+import kotlinx.android.synthetic.main.item_hrm.*
 import kotlinx.android.synthetic.main.item_location.*
 import kotlinx.android.synthetic.main.item_proximity.*
 import kotlinx.android.synthetic.main.item_rotation.*
@@ -153,6 +154,9 @@ class MainActivity : AppCompatActivity() {
         start_button.text =text
     }
 
+    fun onClickedGraphButton(view:View){
+        startActivity(Intent(this,GraphActivity::class.java))
+    }
     fun onClickedStartButton(view: View){
 //        val cameraHiddenIntent = Intent(this,DemoCamService::class.java)
 //        if(!DemoCamService.isRunning){
@@ -215,5 +219,21 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onHrmIrSensorChanged(callback:HrmIrSensor){
+        hrm_ir_value.text = "name : ${callback.name} \nvalue : ${callback.value}"
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onHrmRedSensorChanged(callback:HrmRedSensor){
+        hrm_red_value.text = "name : ${callback.name} \nvalue : ${callback.value}"
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onHrmGreenSensorChanged(callback:HrmGreenSensor){
+        hrm_green_value.text = "name : ${callback.name} \nvalue : ${callback.value}"
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onHrmBlueSensorChanged(callback:HrmBlueSensor){
+        hrm_blue_value.text = "name : ${callback.name} \nvalue : ${callback.value}"
+    }
 
 }

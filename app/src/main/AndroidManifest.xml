@@ -4,19 +4,25 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.BODY_SENSORS"/>
     <uses-permission android:name="com.samsung.permission.SSENSOR_HRM_RAW_PPG"/>
-    <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" />
+    <uses-permission android:name="com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY"/>
 
     <uses-feature android:name="android.hardware.camera2"/>
+    <uses-feature
+            android:name="android.hardware.sensor.proximity"
+            android:required="true"/>
+    <uses-feature
+            android:name="android.hardware.sensor.gyroscope"
+            android:required="true"/>
 
     <application
             android:allowBackup="true"
@@ -32,23 +38,18 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
+        <activity android:name=".GraphActivity"/>
         <service
                 android:name=".ForegroundService"
                 android:enabled="true"
-                android:exported="true" >
+                android:exported="true">
         </service>
         <service
                 android:name=".DemoCamService"
                 android:enabled="true"
-                android:exported="true" >
+                android:exported="true">
         </service>
+
     </application>
 
-    <uses-feature
-            android:name="android.hardware.sensor.proximity"
-            android:required="true" />
-    <uses-feature
-            android:name="android.hardware.sensor.gyroscope"
-            android:required="true" />
 </manifest>

@@ -109,7 +109,12 @@ class ForegroundService: Service(), SensorEventListener {
         if (hrRed != null)hrSensorManager?.unregisterListener(hrSensorListener,hrRed)
         if (hrGreen != null)hrSensorManager?.unregisterListener(hrSensorListener,hrGreen)
         if (hrBlue != null)hrSensorManager?.unregisterListener(hrSensorListener,hrBlue)
-        this.unregisterReceiver(batteryBroadcastReceiver)
+        try {
+            this.unregisterReceiver(batteryBroadcastReceiver)
+        }catch (e:java.lang.Exception){
+
+        }
+
         wl?.release()
         handler.removeCallbacks(periodicUpdate)
     }
@@ -174,18 +179,22 @@ class ForegroundService: Service(), SensorEventListener {
                 Ssensor.TYPE_HRM_LED_IR -> {
                     println("sensor name {${hrSensor.name} \n " +
                             "ir raw data {${event.values[0]}}")
+                    EventBus.getDefault().post(HrmIrSensor(hrSensor.name,event.values[0]))
                 }
                 Ssensor.TYPE_HRM_LED_RED -> {
                     println("sensor name {${hrSensor.name} \n " +
                             "red raw data {${event.values[0]}}")
+                    EventBus.getDefault().post(HrmRedSensor(hrSensor.name,event.values[0]))
                 }
                 Ssensor.TYPE_HRM_LED_GREEN-> {
                     println("sensor name {${hrSensor.name} \n " +
                             "green raw data {${event.values[0]}}")
+                    EventBus.getDefault().post(HrmGreenSensor(hrSensor.name,event.values[0]))
                 }
                 Ssensor.TYPE_HRM_LED_BLUE -> {
                     println("sensor name {${hrSensor.name} \n " +
                             "blue raw data {${event.values[0]}}")
+                    EventBus.getDefault().post(HrmBlueSensor(hrSensor.name,event.values[0]))
                 }
             }
 
