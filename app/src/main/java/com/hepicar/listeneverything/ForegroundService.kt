@@ -23,6 +23,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
 import com.hepicar.listeneverything.model.*
+import com.hepicar.listeneverything.repository.LocalStorage
 import com.samsung.android.sdk.sensorextension.*
 import org.greenrobot.eventbus.EventBus
 import java.io.IOException
@@ -54,6 +55,8 @@ class ForegroundService: Service(), SensorEventListener {
     private var magnetometerData = FloatArray(3)
     var pm: PowerManager? = null
     var wl: PowerManager.WakeLock? = null
+
+    var hrData: MutableList<HeartRate> = ArrayList()
 
     var handler = Handler()
 
@@ -89,6 +92,8 @@ class ForegroundService: Service(), SensorEventListener {
             startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,notification)
             setupSensor()
         }else{
+            println("sensor optik hrm ${hrData}")
+            LocalStorage.saveToCsv(hrData)
             ForegroundService.isRunning = false
             stopForeground(true)
             stopSelf()
@@ -101,7 +106,6 @@ class ForegroundService: Service(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d(TAG, "onDestroy called")
         manager?.unregisterListener(this,accelerometerSensor)
         manager?.unregisterListener(this,proximitySensor)
         manager?.unregisterListener(this,geomagneticSensor)
@@ -134,6 +138,7 @@ class ForegroundService: Service(), SensorEventListener {
             hrGreen = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_GREEN)
             hrBlue = hrSensorManager!!.getDefaultSensor(Ssensor.TYPE_HRM_LED_BLUE)
             hrSensorListener = HrSensorEventListener
+            hrData.clear()
 
             val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
             this.registerReceiver(batteryBroadcastReceiver,intentFilter)
@@ -174,16 +179,18 @@ class ForegroundService: Service(), SensorEventListener {
         override fun OnSensorChanged(event: SsensorEvent?) {
             print("onsensor hrm changed")
             val hrSensor:Ssensor = event!!.sensor
-
+            var hr = HeartRate(System.currentTimeMillis())
             when (event.sensor.type){
                 Ssensor.TYPE_HRM_LED_IR -> {
                     println("sensor name {${hrSensor.name} \n " +
                             "ir raw data {${event.values[0]}}")
+                    hr.hrm_ir = event.values[0]
                     EventBus.getDefault().post(HrmIrSensor(hrSensor.name,event.values[0]))
                 }
                 Ssensor.TYPE_HRM_LED_RED -> {
                     println("sensor name {${hrSensor.name} \n " +
                             "red raw data {${event.values[0]}}")
+                    hr.hrm_red = event.values[0]
                     EventBus.getDefault().post(HrmRedSensor(hrSensor.name,event.values[0]))
                 }
                 Ssensor.TYPE_HRM_LED_GREEN-> {
@@ -197,7 +204,7 @@ class ForegroundService: Service(), SensorEventListener {
                     EventBus.getDefault().post(HrmBlueSensor(hrSensor.name,event.values[0]))
                 }
             }
-
+            hrData.add(hr)
         }
 
         override fun OnAccuracyChanged(event: Ssensor?, p1: Int) {

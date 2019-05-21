@@ -21,6 +21,8 @@ import com.zhaoxiaodan.miband.ActionCallback
 import com.zhaoxiaodan.miband.MiBand
 import com.zhaoxiaodan.miband.listeners.HeartRateNotifyListener
 import com.zhaoxiaodan.miband.listeners.NotifyListener
+import com.zhaoxiaodan.miband.model.UserInfo
+import com.zhaoxiaodan.miband.model.VibrationMode
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_accelerometer.*
 import kotlinx.android.synthetic.main.item_battery.*
@@ -44,16 +46,19 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setupPermission()
 //        openCamera()
+//        setupMiband()
     }
 
     private fun setupPermission() {
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this,Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(this,Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.BODY_SENSORS),
+                    Manifest.permission.BODY_SENSORS,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE),
                 91)
         }
     }
@@ -61,9 +66,10 @@ class MainActivity : AppCompatActivity() {
     private fun setupMiband(){
         println("setup miband")
         miBand = MiBand(this)
-        miBand!!.setDisconnectedListener(disconnectedListener)
-        miBand!!.setHeartRateScanListener(heartRateNotifyListener)
         MiBand.startScan(scanCalback)
+//        miBand!!.setDisconnectedListener(disconnectedListener)
+        miBand!!.setHeartRateScanListener(heartRateNotifyListener)
+
     }
     lateinit var device: BluetoothDevice
     val scanCalback:ScanCallback = object:ScanCallback(){
@@ -71,8 +77,16 @@ class MainActivity : AppCompatActivity() {
             super.onScanResult(callbackType, result)
             device = result!!.device
             println("miband scan.. {${device.name}}")
+            println("miband "+device.address)
+            println("miband "+device.bondState)
+            println("miband "+device.name)
+            println("miband "+device.type)
+            println("miband "+device.uuids)
+            println("miband "+result.rssi)
             if(device.name ==null )return
             if (device.name.equals("MI Band 2")){
+                println("connecting miband")
+                miBand!!.setDisconnectedListener(disconnectedListener)
                 miBand!!.connect(device,connectCallback)
                 MiBand.stopScan(this)
             }
@@ -100,6 +114,8 @@ class MainActivity : AppCompatActivity() {
     val connectCallback: ActionCallback = object:ActionCallback{
         override fun onSuccess(data: Any?) {
             println("miband connect success")
+            println("miband start vibrate")
+            miBand!!.startVibration(VibrationMode.VIBRATION_WITH_LED)
             miBand!!.pair(pairingCallback)
         }
 
